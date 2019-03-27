@@ -74,7 +74,7 @@ class Corpus2Vecs(object):
                 pass
             else:
                 if t.lemma_ == '-PRON-':
-                    final_tokens.append(str(t))
+                    final_tokens.append(str(t).lower)
                 else:
                     sc_removed = re.sub("[^a-zA-Z]", '', str(t.lemma_).lower())
                     if len(sc_removed) > 1:
@@ -82,7 +82,9 @@ class Corpus2Vecs(object):
         return final_tokens
 
     def _word2idx(self, word):
-        return self.model.wv.vocab[word].index
+        if word in self.model.wv.vocab:
+            return self.model.wv.vocab[word].index
+        return 0
     
     def transform(self, X, max_size=50):
         cleaned = [self._text_cleaner(i) for i in X]
