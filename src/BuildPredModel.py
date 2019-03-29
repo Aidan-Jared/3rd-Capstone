@@ -61,4 +61,5 @@ if __name__ == "__main__":
     y_pred.reshape(1,-1)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
+    print('something')
     # model.save('TestModel.h5')
