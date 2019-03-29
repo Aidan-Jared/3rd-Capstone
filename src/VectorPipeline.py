@@ -88,7 +88,6 @@ class Corpus2Vecs(object):
     
     def transform(self, X, max_size=50):
         cleaned = [self._text_cleaner(i) for i in X]
-        
         if self.Vectorize:
             train_x = np.zeros((len(cleaned), max_size), dtype=int)
             for index, i in enumerate(cleaned):
