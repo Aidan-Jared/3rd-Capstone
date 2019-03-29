@@ -88,14 +88,13 @@ class Corpus2Vecs(object):
     
     def transform(self, X, max_size=50):
         cleaned = [self._text_cleaner(i) for i in X]
-        
         if self.Vectorize:
             train_x = np.zeros((len(cleaned), max_size), dtype=int)
             for index, i in enumerate(cleaned):
                 for j, word in enumerate(i):
                     if j < max_size:
                         train_x[index,j] = self._word2idx(word)
-            return train_x, self.model
+            return train_x
         else:
             return cleaned
 

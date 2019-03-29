@@ -38,4 +38,4 @@ if __name__ == "__main__":
     corpus = df['review_body'].values
 
     W2V = Word2Vect(nlp, fileName='models/testword2vec.model')
-    W2V.fit(corpus)
+    W2V.fit(corpus, size=300)
