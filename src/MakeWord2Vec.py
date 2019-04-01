@@ -14,21 +14,30 @@ class Word2Vect(object):
         self.fileName = fileName
     
     def _clean_text(self,X):
-        cleaned_text = Corpus2Vecs(nlp, Vectorize=False, modelFile=None).transform(X)
+        cleaned_text = Corpus2Vecs(nlp, modelFile=None).clean_text(X)
         return cleaned_text
     
-    def fit(self, X, min_count = 1, window = 5, epoch = 200, size = 100):
+    def fit(self, X, min_count = 1, window = 5, epoch = 200, size = 100, load = None):
         cleaned_text = self._clean_text(X)
-        word_model = Word2Vec(
-            cleaned_text,
-            min_count=min_count,
-            window=window,
-            iter=epoch,
-            size=size)
-        if self.fileName != None:
-            word_model.save(self.fileName)
+        if load is not None:
+            word_model = Word2Vec(
+                cleaned_text,
+                min_count=min_count,
+                window=window,
+                iter=epoch,
+                size=size)
+            if self.fileName != None:
+                word_model.save(self.fileName)
+            else:
+                return word_model
         else:
-            return word_model
+            word_model = Word2Vec.load(load)
+            word_model.train(cleaned_text, total_examples=word_model.corpus_count, epochs = epoch)
+            if self.fileName != None:
+                word_model.save(self.fileName)
+            else:
+                return word_model
+
 
 
 if __name__ == "__main__":
