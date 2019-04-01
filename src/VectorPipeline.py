@@ -54,10 +54,9 @@ contraction_mapping = {"ain't": "is not", "aren't": "are not","can't": "cannot",
                    "you'll've": "you will have", "you're": "you are", "you've": "you have" }
 
 class Corpus2Vecs(object):
-    def __init__(self, nlp, Vectorize = False, modelFile = None):
+    def __init__(self, nlp, modelFile = None):
         self.nlp = nlp
-        self.Vectorize = Vectorize
-        if Vectorize:
+        if modelFile is not None:
             self.model = Word2Vec.load(modelFile)
 
     def _text_cleaner(self, Doc):
@@ -86,17 +85,22 @@ class Corpus2Vecs(object):
             return self.model.wv.vocab[word].index
         return 0
     
-    def transform(self, X, max_size=50):
-        cleaned = [self._text_cleaner(i) for i in X]
-        if self.Vectorize:
-            train_x = np.zeros((len(cleaned), max_size), dtype=int)
-            for index, i in enumerate(cleaned):
-                for j, word in enumerate(i):
-                    if j < max_size:
-                        train_x[index,j] = self._word2idx(word)
-            return train_x
-        else:
-            return cleaned
+    def clean_text(self, X):
+        return [self._text_cleaner(i) for i in X]
+
+    def fit(self, X):
+        cleaned = self.clean_text(X)
+        self.max_size = len(max(cleaned, key=len))
+
+    def transform(self, X):
+        cleaned = self.clean_text(X)
+        train_x = np.zeros((len(cleaned), self.max_size), dtype=int)
+        for index, i in enumerate(cleaned):
+            for j, word in enumerate(i):
+                if j < self.max_size:
+                    train_x[index,j] = self._word2idx(word)
+        return train_x
+
 
 if __name__ == "__main__":
     table = pq.read_table('Amz_book_review_short.parquet')

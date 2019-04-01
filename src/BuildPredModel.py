@@ -17,11 +17,10 @@ import h5py
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
-    # model.add(TimeDistributed(Dense(units=emdedding_size)))
-    model.add(Bidirectional(LSTM(units=emdedding_size, dropout=.5)))
+    model.add(LSTM(units=emdedding_size, dropout=.5))
     #model.add(Dense(units=vocab_size))
     model.add(Dense(units=1, activation='relu'))
-    model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"])
+    model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
     return model
 
 def Smote(X, y, random_state = 42, k_neighbors=3, plot = False):
@@ -45,10 +44,11 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(corpus, y, test_size=.2, stratify=y)
 
     nlp = spacy.load('en_core_web_sm', disable=["parser", "tagger"])
-    vectors = Corpus2Vecs(nlp, Vectorize=True, modelFile='models/testword2vec.model')
-    X_train = vectors.transform(X_train, max_size=500)
-    X_test = vectors.transform(X_test, max_size=500)
-    word_model = model = Word2Vec.load('models/testword2vec.model')
+    vectors = Corpus2Vecs(nlp, modelFile='models/testword2vec.model')
+    vectors.fit(X_train)
+    X_train = vectors.transform(X_train)
+    X_test = vectors.transform(X_test)
+    word_model = Word2Vec.load('models/testword2vec.model')
 
     X_smt, y_smt = Smote(X_train, y_train)
 
@@ -56,10 +56,9 @@ if __name__ == "__main__":
     vocab_size, emdedding_size = pretrained_weights.shape
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_smt, y_smt, epochs=5, verbose=1, batch_size=100)
+    model.fit(X_smt, y_smt, epochs=5, verbose=1, validation_data=(X_test, y_test))
     y_pred = model.predict(X_test)
     y_pred.reshape(1,-1)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
-    print('something')
     # model.save('TestModel.h5')
