@@ -44,19 +44,19 @@ class Word2Vect(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Read in Files to make word2vec model')
-    parser.add_argument('--config', type=str)
-    parser.add_argument('--corpusFile', type=str)
-    parser.add_argument('--modelFile', type=str)
-    parser.add_argument('--load', type=str)
+    parser.add_argument('--config', type=str, default='config/Config.json', help='location of file to use as config')
+    parser.add_argument('--corpusFile', type=str, default='Amz_book_review_short.parquet', help='location of file to use as corpus')
+    parser.add_argument('--modelFile', type=str, default='models/testword2vec.model', help='location of where to save the finished model')
+    parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
     args = parser.parse_args()
 
     with open(args.config) as f:
-        config = json.load(f)['Word2Vec']
+        config_WV = json.load(f)['Word2Vec']
 
-    nlp = spacy.load('en_core_web_sm', disable=["parser", "tagger"])
+    nlp = spacy.load(config_WV['spacy_model'], disable=config_WV['spacy_disable'])
     table = pq.read_table(args.corpusFile)
     df = table.to_pandas()
-    corpus = df['review_body'].values
+    corpus = df[config_WV['corpus_col']].values
 
     W2V = Word2Vect(nlp, fileName=args.modelFile)
-    W2V.fit(corpus, min_count=config['min_count'], window=config['window'], epoch=config['epoch'], size=config['size'], load=args.load)
+    W2V.fit(corpus, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)

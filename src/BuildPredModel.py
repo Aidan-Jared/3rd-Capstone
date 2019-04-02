@@ -13,6 +13,8 @@ from MakeWord2Vec import Corpus2Vecs
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import h5py
+import argparse
+import json
 
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
@@ -43,18 +45,29 @@ def Rounding(y):
     return y
 
 if __name__ == "__main__":
-    table = pq.read_table('Amz_book_review_short.parquet')
+    parser = argparse.ArgumentParser(description='Read in Files to make LSTM model')
+    parser.add_argument('--config', type=str, default='config/Config.json', help='location of file to use as config')
+    parser.add_argument('--TrainFile', type=str, default='Amz_book_review_short.parquet', help='location of file to use as corpus')
+    parser.add_argument('--word2vecModel', type=str, default='models/testword2vec.model', help='location of the premade word2vec model')
+    # parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
+    args = parser.parse_args()
+
+    with open(args.config) as f:
+        config_PM = json.load(f)['PredModel']
+    
+    table = pq.read_table(args.TrainFile)
     df = table.to_pandas()
-    corpus = df['review_body'].values
-    y = df['star_rating'].values
+
+    corpus = df[config_PM['corpus_col']].values
+    y = df[config_PM['y_col']].values
     X_train, X_test, y_train, y_test = train_test_split(corpus, y, test_size=.2, stratify=y)
 
-    nlp = spacy.load('en_core_web_sm', disable=["parser", "tagger"])
-    vectors = Corpus2Vecs(nlp, modelFile='models/testword2vec.model')
+    nlp = spacy.load(config_PM['spacy_model'], disable=config_PM['spacy_disable'])
+    vectors = Corpus2Vecs(nlp, modelFile=args.word2vecModel)
     vectors.fit(X_train)
     X_train = vectors.transform(X_train)
     X_test = vectors.transform(X_test)
-    word_model = Word2Vec.load('models/testword2vec.model')
+    word_model = Word2Vec.load(args.word2vecModel)
 
     X_smt, y_smt = Smote(X_train, y_train)
 
@@ -62,7 +75,7 @@ if __name__ == "__main__":
     vocab_size, emdedding_size = pretrained_weights.shape
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_smt, y_smt, epochs=1, verbose=1, validation_data=(X_test, y_test))
+    model.fit(X_smt, y_smt, epochs=config_PM['epoch'], verbose=config_PM['verbose'], validation_data=(X_test, y_test))
     y_pred = model.predict(X_test)
     y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)

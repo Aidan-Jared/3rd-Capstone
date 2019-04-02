@@ -3,9 +3,18 @@
         "min_count":1,
         "window":5,
         "epoch":200,
-        "size":300
+        "size":300,
+        "spacy_model":"en_core_web_sm",
+        "spacy_disable":["parser", "tagger"],
+        "corpus_col": "review_body"
     },
+
     "PredModel":{
-        
+        "corpus_col": "review_body",
+        "y_col": "star_rating",
+        "spacy_model":"en_core_web_sm",
+        "spacy_disable":["parser", "tagger"],
+        "epoch":1,
+        "verbose":1
     }
 }
