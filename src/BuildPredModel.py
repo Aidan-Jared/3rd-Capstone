@@ -36,6 +36,12 @@ def Smote(X, y, random_state = 42, k_neighbors=3, plot = False):
     #     plt.savefig('images/SMOTE_class_distributions.png')
       return X_smt, y_smt
 
+def Rounding(y):
+    y = np.round(y)
+    y[y > 5] = 5
+    y[y < 1] = 1
+    return y
+
 if __name__ == "__main__":
     table = pq.read_table('Amz_book_review_short.parquet')
     df = table.to_pandas()
@@ -56,9 +62,10 @@ if __name__ == "__main__":
     vocab_size, emdedding_size = pretrained_weights.shape
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_smt, y_smt, epochs=5, verbose=1, validation_data=(X_test, y_test))
+    model.fit(X_smt, y_smt, epochs=1, verbose=1, validation_data=(X_test, y_test))
     y_pred = model.predict(X_test)
     y_pred.reshape(1,-1)
+    y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
     # model.save('TestModel.h5')

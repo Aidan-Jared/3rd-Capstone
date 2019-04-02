@@ -1,0 +1,11 @@
+{
+    "Word2Vec":{
+        "min_count":1,
+        "window":5,
+        "epoch":200,
+        "size":300
+    },
+    "PredModel":{
+        
+    }
+}
