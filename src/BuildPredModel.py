@@ -3,15 +3,15 @@ import pandas as pd
 import pyarrow.parquet as pq
 from gensim.models.word2vec import Word2Vec
 import spacy
-from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
 from keras.models import Sequential
-from keras.layers import LSTM, Dense, Bidirectional, Embedding, Dropout
-from keras.layers import TimeDistributed
+from keras.layers import LSTM, Dense, Bidirectional, Embedding, Dropout, TimeDistributed
 from keras.optimizers import Adam
 from keras.initializers import Constant
 from MakeWord2Vec import Corpus2Vecs
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
+from sklearn.utils.class_weight import compute_sample_weight 
 import h5py
 import argparse
 import json
@@ -19,8 +19,9 @@ import json
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
+    model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
     model.add(LSTM(units=emdedding_size, dropout=.5))
-    #model.add(Dense(units=vocab_size))
+    model.add(Dense(units=int(emdedding_size / 4), activation='tanh'))
     model.add(Dense(units=1, activation='relu'))
     model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
     return model
@@ -69,15 +70,20 @@ if __name__ == "__main__":
     X_test = vectors.transform(X_test)
     word_model = Word2Vec.load(args.word2vecModel)
 
-    X_smt, y_smt = Smote(X_train, y_train)
+    #class_weight = [{0:1,1:10}, {0:1,1:10},{0:1, 1:8},{0:1, 1:8},{0:1,1:1}]
+    sample_weight = compute_sample_weight('balanced', y_train)
+
+    # rus = RandomUnderSampler(random_state=0)
+    # X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+    # X_smt, y_smt = Smote(X_train, y_train)
 
     pretrained_weights = word_model.wv.syn0
     vocab_size, emdedding_size = pretrained_weights.shape
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_smt, y_smt, epochs=config_PM['epoch'], verbose=config_PM['verbose'], validation_data=(X_test, y_test))
+    model.fit(X_train, y_train, epochs=config_PM['epoch'], verbose=config_PM['verbose'], validation_data=(X_test, y_test), sample_weight=sample_weight)
     y_pred = model.predict(X_test)
-    y_pred.reshape(1,-1)
+    y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
