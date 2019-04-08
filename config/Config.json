@@ -4,7 +4,7 @@
         "window":5,
         "epoch":200,
         "size":300,
-        "spacy_model":"en_core_web_sm",
+        "spacy_model":"en_core_web_md",
         "spacy_disable":["parser", "tagger"],
         "corpus_col": "review_body"
     },
@@ -12,7 +12,7 @@
     "PredModel":{
         "corpus_col": "review_body",
         "y_col": "star_rating",
-        "spacy_model":"en_core_web_sm",
+        "spacy_model":"en_core_web_md",
         "spacy_disable":["parser", "tagger"],
         "epoch":5,
         "verbose":1

@@ -109,11 +109,4 @@ if __name__ == "__main__":
     y = df['star_rating'].values
     thing = Corpus2Vecs(nlp)
     cleaned = thing.transform(corpus)
-    
-    word_model = Word2Vec(cleaned, min_count=1, window=5, iter=200)
-    pretrained_weights = word_model.wv.syn0
-    vocab_size, emdedding_size = pretrained_weights.shape
-
-
-    # model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"])
-    # model.fit(train_x, y, verbose=1, epochs=100)
+    print(cleaned)
