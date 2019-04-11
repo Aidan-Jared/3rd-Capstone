@@ -5,9 +5,10 @@ import spacy
 import re
 import unidecode
 import codecs
-import pyarrow.parquet as pq
-from gensim.models.word2vec import Word2Vec
-nlp = spacy.load('en_core_web_lg', disable=["parser", "tagger"])
+import argparse
+import json
+from markdown import markdown
+from bs4 import BeautifulSoup
 
 contraction_mapping = {"ain't": "is not", "aren't": "are not","can't": "cannot", 
                    "can't've": "cannot have", "'cause": "because", "could've": "could have", 
@@ -60,6 +61,8 @@ class Corpus2Vecs(object):
             self.model = Word2Vec.load(modelFile)
 
     def _text_cleaner(self, Doc):
+        html = markdown(Doc)
+        Doc = ' '.join(BeautifulSoup(html).findAll(text=True))
         try:
             decoded = unidecode.unidecode(codecs.decode(Doc, 'unicode_escape'))
         except:
@@ -73,12 +76,12 @@ class Corpus2Vecs(object):
                 pass
             else:
                 if t.lemma_ == '-PRON-':
-                    final_tokens.append(str(t).lower)
+                    final_tokens.append(str(t).lower())
                 else:
                     sc_removed = re.sub("[^a-zA-Z]", '', str(t.lemma_).lower())
                     if len(sc_removed) > 1:
                         final_tokens.append(str(t.lemma_).lower())
-        return final_tokens
+        return ' '.join(final_tokens)
 
     def _word2idx(self, word):
         if word in self.model.wv.vocab:
@@ -86,16 +89,16 @@ class Corpus2Vecs(object):
         return 0
     
     def clean_text(self, X):
-        return [self._text_cleaner(i) for i in X]
+        return self._text_cleaner(X)
 
     def fit(self, X):
-        cleaned = self.clean_text(X)
-        self.max_size = len(max(cleaned, key=len))
+        # cleaned = self.clean_text(X)
+        self.max_size = len(max(X, key=len))
 
     def transform(self, X):
-        cleaned = self.clean_text(X)
-        train_x = np.zeros((len(cleaned), self.max_size), dtype=int)
-        for index, i in enumerate(cleaned):
+        #  cleaned = self.clean_text(X)
+        train_x = np.zeros((len(X), self.max_size), dtype=int)
+        for index, i in enumerate(X):
             for j, word in enumerate(i):
                 if j < self.max_size:
                     train_x[index,j] = self._word2idx(word)
@@ -103,10 +106,23 @@ class Corpus2Vecs(object):
 
 
 if __name__ == "__main__":
-    table = pq.read_table('Amz_book_review_short.parquet')
-    df = table.to_pandas()
-    corpus = df['review_body'].values
-    y = df['star_rating'].values
-    thing = Corpus2Vecs(nlp)
-    cleaned = thing.transform(corpus)
-    print(cleaned)
+    parser = argparse.ArgumentParser(description='Read in Files to make word2vec model')
+    parser.add_argument('--data', type=str, default='Amz_book_review_short.parquet', help='location of data')
+    args = parser.parse_args()
+    
+    # df = spark.read.parquet(args.data)
+    # df = df.select(['product_id', 'product_title', 'review_headline', 'review_body', 'star_rating'])
+    
+    # nlp = spacy.load('en_core_web_md', disable=["parser", "tagger", "ner"])
+    
+    # df = df.withColumn('joined', sf.concat(sf.col('review_headline'), sf.lit(' - '), sf.col('review_body')))
+    
+    # f = udf(Corpus2Vecs(nlp, modelFile=None).clean_text, StringType())
+    # df = df.withColumn('review_body_clean', f(df.joined))
+    
+    # df = df.withColumn('review_body_clean', sf.split('review_body_clean', ' '))
+    
+    # df = df.select(['product_id', 'product_title','review_body_clean', 'star_rating'])
+    # df.show(5)
+    
+    # df.write.parquet("s3n://capstone-3-data-bucket-aidan/data/cleaned_data.parquet",mode="overwrite")

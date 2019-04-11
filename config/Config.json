@@ -5,7 +5,7 @@
         "epoch":200,
         "size":300,
         "spacy_model":"en_core_web_md",
-        "spacy_disable":["parser", "tagger"],
+        "spacy_disable":["parser", "tagger", "ner"],
         "corpus_col": "review_body"
     },
 
@@ -13,7 +13,7 @@
         "corpus_col": "review_body",
         "y_col": "star_rating",
         "spacy_model":"en_core_web_md",
-        "spacy_disable":["parser", "tagger"],
+        "spacy_disable":["parser", "tagger", "ner"],
         "epoch":5,
         "verbose":1
     }
