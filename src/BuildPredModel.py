@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 from gensim.models.word2vec import Word2Vec
 import spacy
-from imblearn.under_sampling import RandomUnderSampler
+# from imblearn.under_sampling import RandomUnderSampler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Bidirectional, Embedding, Dropout, TimeDistributed
 from keras.optimizers import Adam
 from keras.initializers import Constant
-from keras.utils import multi_gpu_model
+# from keras.utils import multi_gpu_model
 from MakeWord2Vec import Corpus2Vecs
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
@@ -48,21 +48,16 @@ if __name__ == "__main__":
     parser.add_argument('--train', type=str, default="s3://capstone-3-data-bucket-aidan/data/train_data.parquet", help='location of file to use for training')
     parser.add_argument('--val', type=str, default="s3://capstone-3-data-bucket-aidan/data/valadation_data.parquet", help='location of file to use for valadation')
     parser.add_argument('--test', type=str, default="s3://capstone-3-data-bucket-aidan/data/test_data.parquet", help='location of file to use for test')
-    parser.add_argument('--word2vecModel', type=str, default='models/testword2vec.model', help='location of the premade word2vec model')
+    parser.add_argument('--word2vecModel', type=str, default='models/word2vec.model', help='location of the premade word2vec model')
     # parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
     args = parser.parse_args()
 
     with open(args.config) as f:
         config_PM = json.load(f)['PredModel']
     
-    
     train = pq.ParquetDataset(args.train, filesystem=s3).read_pandas().to_pandas()
     val = pq.ParquetDataset(args.val, filesystem=s3).read_pandas().to_pandas()
     test = pq.ParquetDataset(args.test, filesystem=s3).read_pandas().to_pandas()
-    
-    # df = spark.read.parquet(args.File)
-    
-    # train, val, test = df.randomSplit([0.7, 0.1, 0.2], seed=427471138)
     
     train, y_train = text_prep(train)
     val, y_val = text_prep(val)
@@ -77,7 +72,6 @@ if __name__ == "__main__":
     X_test = vectors.transform(test)
     word_model = Word2Vec.load(args.word2vecModel)
 
-    #class_weight = [{0:1,1:10}, {0:1,1:10},{0:1, 1:8},{0:1, 1:8},{0:1,1:1}]
     sample_weight = compute_sample_weight('balanced', y_train)
 
     # rus = RandomUnderSampler(random_state=0)
@@ -90,10 +84,10 @@ if __name__ == "__main__":
     print(vocab_size, emdedding_size)
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_train, y_train, epochs=config_PM['epoch'], verbose=config_PM['verbose'], sample_weight=sample_weight)
+    model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=10, verbose=config_PM['verbose'], sample_weight=sample_weight)
     y_pred = model.predict(X_test)
     y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
-    model.save('TestModel.h5')
+    model.save('BookPresentModel.h5')
