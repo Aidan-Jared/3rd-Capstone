@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from gensim.models.word2vec import Word2Vec
 import spacy
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Bidirectional, Embedding
-from keras.layers import TimeDistributed
+# from keras.models import Sequential
+# from keras.layers import LSTM, Dense, Bidirectional, Embedding
+# from keras.layers import TimeDistributed
 from VectorPipeline import Corpus2Vecs
 import argparse
 import json
@@ -16,10 +16,6 @@ class Word2Vect(object):
     def __init__(self, nlp, fileName=None):
         self.nlp = nlp
         self.fileName = fileName
-    
-    # def _clean_text(self,X):
-    #     cleaned_text = X.rdd.map(Corpus2Vecs(nlp, modelFile=None).clean_text)
-    #     return cleaned_text
     
     def fit(self, X, min_count = 1, window = 5, epoch = 200, size = 100, load = None):
         if load is None:
@@ -42,14 +38,15 @@ class Word2Vect(object):
                 return word_model
 
 def text_prep(df):
-    text = df['review_body_clean'].values
+    text = df['review_body_clean']
     y = df['star_rating'].values
+    text = [i.tolist() for i in text.values]
     return text, y
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Read in Files to make word2vec model')
     parser.add_argument('--config', type=str, default='config/Config.json', help='location of file to use as config')
-    parser.add_argument('--train', type=str, default="s3n://capstone-3-data-bucket-aidan/data/cleaned_data.parquet", help='location of file to use as corpus')
+    parser.add_argument('--train', type=str, default="s3://capstone-3-data-bucket-aidan/data/train_data.parquet", help='location of file to use as corpus')
     parser.add_argument('--modelFile', type=str, default='models/testword2vec.model', help='location of where to save the finished model')
     parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
     args = parser.parse_args()

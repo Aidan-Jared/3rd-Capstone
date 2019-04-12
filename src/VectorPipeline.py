@@ -54,42 +54,43 @@ contraction_mapping = {"ain't": "is not", "aren't": "are not","can't": "cannot",
                    "you'd": "you would", "you'd've": "you would have", "you'll": "you will", 
                    "you'll've": "you will have", "you're": "you are", "you've": "you have" }
 
+nlp = spacy.load('en_core_web_md', disable=["parser", "tagger", "ner"])
+
 class Corpus2Vecs(object):
-    def __init__(self, nlp, modelFile = None):
-        self.nlp = nlp
+    def __init__(self, modelFile = None):
         if modelFile is not None:
             self.model = Word2Vec.load(modelFile)
 
-    def _text_cleaner(self, Doc):
-        html = markdown(Doc)
-        Doc = ' '.join(BeautifulSoup(html).findAll(text=True))
-        try:
-            decoded = unidecode.unidecode(codecs.decode(Doc, 'unicode_escape'))
-        except:
-            decoded = unidecode.unidecode(Doc)
-        apostrophe_handled = re.sub("’", "'", decoded)
-        expanded = ' '.join([contraction_mapping[t] if t in contraction_mapping else t for t in apostrophe_handled.split(" ")])
-        Doc = self.nlp(expanded)
-        final_tokens = []
-        for t in Doc:
-            if t.is_punct or t.is_space or t.like_num or t.like_url or t.is_stop:
-                pass
-            else:
-                if t.lemma_ == '-PRON-':
-                    final_tokens.append(str(t).lower())
-                else:
-                    sc_removed = re.sub("[^a-zA-Z]", '', str(t.lemma_).lower())
-                    if len(sc_removed) > 1:
-                        final_tokens.append(str(t.lemma_).lower())
-        return ' '.join(final_tokens)
+    # def text_cleaner(self, Doc):
+    #     html = markdown(Doc)
+    #     Doc = ' '.join(BeautifulSoup(html, features="html.parser").findAll(text=True))
+    #     try:
+    #         decoded = unidecode.unidecode(codecs.decode(Doc, 'unicode_escape'))
+    #     except:
+    #         decoded = unidecode.unidecode(Doc)
+    #     apostrophe_handled = re.sub("’", "'", decoded)
+    #     expanded = ' '.join([contraction_mapping[t] if t in contraction_mapping else t for t in apostrophe_handled.split(" ")])
+    #     Doc = self.nlp(expanded)
+    #     final_tokens = []
+    #     for t in Doc:
+    #         if t.is_punct or t.is_space or t.like_num or t.like_url or t.is_stop:
+    #             pass
+    #         else:
+    #             if t.lemma_ == '-PRON-':
+    #                 final_tokens.append(str(t).lower())
+    #             else:
+    #                 sc_removed = re.sub("[^a-zA-Z]", '', str(t.lemma_).lower())
+    #                 if len(sc_removed) > 1:
+    #                     final_tokens.append(str(t.lemma_).lower())
+    #     return ' '.join(final_tokens)
 
     def _word2idx(self, word):
         if word in self.model.wv.vocab:
             return self.model.wv.vocab[word].index
         return 0
     
-    def clean_text(self, X):
-        return self._text_cleaner(X)
+    # def clean_text(self, X):
+    #     return self._text_cleaner(X)
 
     def fit(self, X):
         # cleaned = self.clean_text(X)

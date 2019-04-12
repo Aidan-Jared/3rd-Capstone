@@ -20,18 +20,19 @@ import s3fs
 s3 = s3fs.S3FileSystem()
 
 def text_prep(df):
-    text = df['review_body_clean'].values
+    text = df['review_body_clean']
     y = df['star_rating'].values
+    text = [i.tolist() for i in text.values]
     return text, y
 
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
-    model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
+    #model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
     model.add(LSTM(units=emdedding_size, dropout=.5))
     model.add(Dense(units=int(emdedding_size / 4), activation='tanh'))
     model.add(Dense(units=1, activation='relu'))
-    model = multi_gpu_model(model, gpus=1)
+    #model = multi_gpu_model(model, gpus=2)
     model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
     return model
 
@@ -69,7 +70,7 @@ if __name__ == "__main__":
     
 
     nlp = spacy.load(config_PM['spacy_model'], disable=config_PM['spacy_disable'])
-    vectors = Corpus2Vecs(nlp, modelFile=args.word2vecModel)
+    vectors = Corpus2Vecs(modelFile=args.word2vecModel)
     vectors.fit(train)
     X_train = vectors.transform(train)
     X_val = vectors.transform(val)
@@ -85,9 +86,11 @@ if __name__ == "__main__":
 
     pretrained_weights = word_model.wv.syn0
     vocab_size, emdedding_size = pretrained_weights.shape
+    print('X shape: ', X_train.shape)
+    print(vocab_size, emdedding_size)
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_train, y_train, epochs=config_PM['epoch'], verbose=config_PM['verbose'], validation_data=(X_val, y_val), sample_weight=sample_weight)
+    model.fit(X_train, y_train, epochs=config_PM['epoch'], verbose=config_PM['verbose'], sample_weight=sample_weight)
     y_pred = model.predict(X_test)
     y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
