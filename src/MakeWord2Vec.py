@@ -13,8 +13,7 @@ import s3fs
 s3 = s3fs.S3FileSystem()
 
 class Word2Vect(object):
-    def __init__(self, nlp, fileName=None):
-        self.nlp = nlp
+    def __init__(self, fileName=None):
         self.fileName = fileName
     
     def fit(self, X, min_count = 1, window = 5, epoch = 200, size = 100, load = None):
@@ -34,6 +33,7 @@ class Word2Vect(object):
             word_model.train(X, total_examples=word_model.corpus_count, epochs = epoch)
             if self.fileName != None:
                 word_model.save(self.fileName)
+                return word_model
             else:
                 return word_model
 
@@ -60,8 +60,11 @@ if __name__ == "__main__":
     
     with open(args.config) as f:
         config_WV = json.load(f)['Word2Vec']
-
-    nlp = spacy.load(config_WV['spacy_model'], disable=config_WV['spacy_disable'])
     
-    W2V = Word2Vect(nlp, fileName=args.modelFile)
-    W2V.fit(train, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)
+    W2V = Word2Vect(fileName=None) #args.modelFile
+    model = W2V.fit(train, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)
+    
+    test_lst = ['fiction', 'fantasy', 'romance', 'religion', 'history']
+    for i in test_lst:
+        print(i)
+        print(model.wv.most_similar_cosmul(positive=i, topn=5), '\n')

@@ -1,19 +1,15 @@
 {
     "Word2Vec":{
-        "min_count":1,
-        "window":5,
-        "epoch":200,
+        "min_count":3,
+        "window":15,
+        "epoch":300,
         "size":300,
-        "spacy_model":"en_core_web_md",
-        "spacy_disable":["parser", "tagger", "ner"],
         "corpus_col": "review_body"
     },
 
     "PredModel":{
         "corpus_col": "review_body",
         "y_col": "star_rating",
-        "spacy_model":"en_core_web_md",
-        "spacy_disable":["parser", "tagger", "ner"],
         "epoch":5,
         "verbose":1
     }
