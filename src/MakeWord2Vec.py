@@ -6,6 +6,7 @@ from VectorPipeline import Corpus2Vecs
 import argparse
 import json
 import pyarrow.parquet as pq
+import pickle
 import s3fs
 s3 = s3fs.S3FileSystem()
 

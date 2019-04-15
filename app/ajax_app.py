@@ -6,8 +6,8 @@ import h5py
 app = Flask(__name__)
 
 
-# with open('models/vectortransform.pkl', 'rb') as f:
-#     vector = pickle.load(f)
+with open('models/vectortransform.pkl', 'rb') as f:
+    vector = pickle.load(f)
 model = load_model('models/TestModel.h5')
 
 @app.route('/', methods=['GET'])
