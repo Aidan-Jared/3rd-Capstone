@@ -17,6 +17,7 @@ import argparse
 import json
 import pyarrow.parquet as pq
 import s3fs
+import pickle
 s3 = s3fs.S3FileSystem()
 
 def text_prep(df):
@@ -71,6 +72,8 @@ if __name__ == "__main__":
     X_val = vectors.transform(val)
     X_test = vectors.transform(test)
     word_model = Word2Vec.load(args.word2vecModel)
+    with open('models/vectortransform.pkl', 'wb') as f:
+        pickle.dump(vectors, f)
 
     sample_weight = compute_sample_weight('balanced', y_train)
 
@@ -82,11 +85,11 @@ if __name__ == "__main__":
     vocab_size, emdedding_size = pretrained_weights.shape
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    history = model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=10, verbose=config_PM['verbose'], sample_weight=sample_weight)
+    history = model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=config_PM['batch_size'], verbose=config_PM['verbose'], sample_weight=sample_weight)
     print(history.history['loss'])
     y_pred = model.predict(X_test)
     y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
-    model.save('BookPresentModel.h5')
+    model.save(config_PM['model_name'])
