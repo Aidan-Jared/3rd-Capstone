@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 from gensim.models.word2vec import Word2Vec
 import spacy
-# from keras.models import Sequential
-# from keras.layers import LSTM, Dense, Bidirectional, Embedding
-# from keras.layers import TimeDistributed
 from VectorPipeline import Corpus2Vecs
 import argparse
 import json
@@ -40,7 +37,7 @@ class Word2Vect(object):
 def text_prep(df):
     text = df['review_body_clean']
     y = df['star_rating'].values
-    text = [i.tolist() for i in text.values]
+    text = [i.tolist() if i is not None else [''] for i in text]
     return text, y
 
 if __name__ == "__main__":
@@ -50,10 +47,8 @@ if __name__ == "__main__":
     parser.add_argument('--modelFile', type=str, default='models/word2vec.model', help='location of where to save the finished model')
     parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
     args = parser.parse_args()
-    
-    # df = spark.read.parquet(args.corpusFile)
-    
-    # train, val, test = df.randomSplit([0.7, 0.1, 0.2], seed=427471138)
+
+    print('Reading in Data')
     train = pq.ParquetDataset(args.train, filesystem=s3).read_pandas().to_pandas()
     
     train, y = text_prep(train)
@@ -61,9 +56,11 @@ if __name__ == "__main__":
     with open(args.config) as f:
         config_WV = json.load(f)['Word2Vec']
     
-    W2V = Word2Vect(fileName=None) #args.modelFile
+    print('Starting Word2Vec training')
+    W2V = Word2Vect(fileName=args.modelFile)
     model = W2V.fit(train, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)
-    
+    print('finished training', '\n')
+
     test_lst = ['fiction', 'fantasy', 'romance', 'religion', 'history']
     for i in test_lst:
         print(i)

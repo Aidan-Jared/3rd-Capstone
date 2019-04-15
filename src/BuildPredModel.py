@@ -22,7 +22,7 @@ s3 = s3fs.S3FileSystem()
 def text_prep(df):
     text = df['review_body_clean']
     y = df['star_rating'].values
-    text = [i.tolist() for i in text.values]
+    text = [i.tolist() if i is not None else [''] for i in text]
     return text, y
 
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
@@ -80,11 +80,10 @@ if __name__ == "__main__":
 
     pretrained_weights = word_model.wv.syn0
     vocab_size, emdedding_size = pretrained_weights.shape
-    print('X shape: ', X_train.shape)
-    print(vocab_size, emdedding_size)
 
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=10, verbose=config_PM['verbose'], sample_weight=sample_weight)
+    history = model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=10, verbose=config_PM['verbose'], sample_weight=sample_weight)
+    print(history.history['loss'])
     y_pred = model.predict(X_test)
     y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
