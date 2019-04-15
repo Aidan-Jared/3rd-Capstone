@@ -24,8 +24,8 @@ sc=spark.sparkContext
 sc.setLogLevel("OFF")
 hadoop_conf=sc._jsc.hadoopConfiguration()
 hadoop_conf.set("fs.s3n.impl", "org.apache.hadoop.fs.s3native.NativeS3FileSystem")
-hadoop_conf.set("fs.s3n.awsAccessKeyId", <your accesskey>)
-hadoop_conf.set("fs.s3n.awsSecretAccessKey", <your secretaccesskey>)
+hadoop_conf.set("fs.s3n.awsAccessKeyId", '')
+hadoop_conf.set("fs.s3n.awsSecretAccessKey", '')
 
 from pyspark.sql import functions as sf
 from pyspark.sql.types import StringType
@@ -35,7 +35,7 @@ with open('config/contraction_mapping.json') as f:
 
 def text_cleaner(Doc):
         if Doc is not None:
-            Doc = ' '.join(BeautifulSoup(Doc, "lxml").findAll(text=True))
+            Doc = ' '.join(BeautifulSoup(Doc).findAll(text=True))
             try:
                 Doc = unidecode.unidecode(codecs.decode(Doc, 'unicode_escape'))
             except:
@@ -77,9 +77,10 @@ if __name__ == "__main__":
     df = df.select(['product_id', 'product_title', 'review_headline', 'review_body', 'star_rating'])
     
     df = df.withColumn('joined', sf.concat(sf.col('review_headline'), sf.lit(' - '), sf.col('review_body')))
+    df.show(1, False)
     df = df.withColumn('review_body_clean', sf.split(textclean(df.joined), ' '))
     df = df.select(['product_id', 'product_title','review_body_clean', 'star_rating'])
-    df.printSchema()
+    df.show(1, False)
     
     print('starting train test split \n')
     train, val, test = df.randomSplit([0.7, 0.1, 0.2], seed=427471138)
