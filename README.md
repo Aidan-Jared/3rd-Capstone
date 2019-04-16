@@ -65,5 +65,14 @@ I then applied a random split to the Spark dataframe and got a train, valadation
 
 For data featurization I decided to do a Word2Vec model due to an understanding of the process and familiarity with Gensim. After some testing and checking I found that ```input settings``` worked the best and produced the best embeddings as you can see here:
 
+|Original Word|Most Simular|Second Most Simular|Third Most Simular|Forth Most Simular|Fifth Most Simular|
+|--------|------|------|------|-----|------|
+|fiction|ironclads|ele|Humphries|Hundley|sane|
+|fantasy|Znosko|Perceptions|Mazer|Pye|Rebels|
+|romance|Jackets|Abandonment|Phileas|Ugly|hight|
+|religion|HATES|cornstarch|Logically|aloofness|DREAMS|
+|history|NADA|Sundeen|Chobits|SOS|chieftain|
+
 ## Predictive Model
 
+To build my predictive model I decided to look at sentiment analysis Neuaral Nets as a base because review scores can be seen as a type of sentiment. In order to apply to Word2Vec model the first layer of my model was an embedding layer to which I added in the Word2Vec weights and I then made that layer untrainable. This layer then went into a LSTM and then a dense layerwith a tanh acvtivation fuction into a singluar dense output with a relu activation. I then rounded the results and found the MSE of the model.

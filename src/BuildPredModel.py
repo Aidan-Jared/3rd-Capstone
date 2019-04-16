@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 from gensim.models.word2vec import Word2Vec
-import spacy
-# from imblearn.under_sampling import RandomUnderSampler
+#import spacy
+from imblearn.under_sampling import RandomUnderSampler
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Bidirectional, Embedding, Dropout, TimeDistributed
 from keras.optimizers import Adam
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     with open(args.config) as f:
         config_PM = json.load(f)['PredModel']
     
+    print('loading data')
     train = pq.ParquetDataset(args.train, filesystem=s3).read_pandas().to_pandas()
     val = pq.ParquetDataset(args.val, filesystem=s3).read_pandas().to_pandas()
     test = pq.ParquetDataset(args.test, filesystem=s3).read_pandas().to_pandas()
@@ -64,32 +65,34 @@ if __name__ == "__main__":
     val, y_val = text_prep(val)
     test, y_test = text_prep(test)
     
-
-    nlp = spacy.load(config_PM['spacy_model'], disable=config_PM['spacy_disable'])
+    print('formating data')
+    #nlp = spacy.load(config_PM['spacy_model'], disable=config_PM['spacy_disable'])
     vectors = Corpus2Vecs(modelFile=args.word2vecModel)
     vectors.fit(train)
     X_train = vectors.transform(train)
     X_val = vectors.transform(val)
     X_test = vectors.transform(test)
     word_model = Word2Vec.load(args.word2vecModel)
-    with open('models/vectortransform.pkl', 'wb') as f:
+
+    with open('models/vector.pkl', 'wb') as f:
         pickle.dump(vectors, f)
 
-    sample_weight = compute_sample_weight('balanced', y_train)
+    #sample_weight = compute_sample_weight('balanced', y_train)
 
-    # rus = RandomUnderSampler(random_state=0)
-    # X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
+    rus = RandomUnderSampler(random_state=0)
+    X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
     # X_smt, y_smt = Smote(X_train, y_train)
 
     pretrained_weights = word_model.wv.syn0
     vocab_size, emdedding_size = pretrained_weights.shape
-
+    
+    print('starting model training')
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    history = model.fit(X_train, y_train, epochs=config_PM['epoch'], batch_size=config_PM['batch_size'], verbose=config_PM['verbose'], sample_weight=sample_weight)
+    history = model.fit(X_resampled, y_resampled, epochs=config_PM['epoch'], verbose=config_PM['verbose'], batch_size=200)
     print(history.history['loss'])
     y_pred = model.predict(X_test)
     y_pred = y_pred.reshape(1,-1)
     y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
-    model.save(config_PM['model_name'])
+    model.save('BookPresentModel.h5')

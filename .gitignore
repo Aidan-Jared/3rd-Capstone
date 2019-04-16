@@ -2,4 +2,6 @@ Amz_book_review_short.parquet
 src/__pycache__
 src/test.ipynb
 src/.ipynb_checkpoints/
+models/
+app/
 *.sh

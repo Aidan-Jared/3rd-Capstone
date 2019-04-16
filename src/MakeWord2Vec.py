@@ -6,7 +6,6 @@ from VectorPipeline import Corpus2Vecs
 import argparse
 import json
 import pyarrow.parquet as pq
-import pickle
 import s3fs
 s3 = s3fs.S3FileSystem()
 
@@ -21,7 +20,8 @@ class Word2Vect(object):
                 min_count=min_count,
                 window=window,
                 iter=epoch,
-                size=size)
+                size=size,
+		workers = -1)
             if self.fileName != None:
                 word_model.save(self.fileName)
             else:
@@ -31,7 +31,6 @@ class Word2Vect(object):
             word_model.train(X, total_examples=word_model.corpus_count, epochs = epoch)
             if self.fileName != None:
                 word_model.save(self.fileName)
-                return word_model
             else:
                 return word_model
 
@@ -59,10 +58,11 @@ if __name__ == "__main__":
     
     print('Starting Word2Vec training')
     W2V = Word2Vect(fileName=args.modelFile)
-    model = W2V.fit(train, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)
+    W2V.fit(train, min_count=config_WV['min_count'], window=config_WV['window'], epoch=config_WV['epoch'], size=config_WV['size'], load=args.load)
     print('finished training', '\n')
 
+    word_model = Word2Vec.load('models/word2vec.model')
     test_lst = ['fiction', 'fantasy', 'romance', 'religion', 'history']
     for i in test_lst:
         print(i)
-        print(model.wv.most_similar_cosmul(positive=i, topn=5), '\n')
+        print(word_model.wv.most_similar_cosmul(positive=i, topn=5), '\n')

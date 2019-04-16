@@ -6,6 +6,7 @@ import json
 from bs4 import BeautifulSoup
 import re
 import unidecode
+import json
 
 # Spark starting information
 import os
@@ -77,20 +78,19 @@ if __name__ == "__main__":
     df = df.select(['product_id', 'product_title', 'review_headline', 'review_body', 'star_rating'])
     
     df = df.withColumn('joined', sf.concat(sf.col('review_headline'), sf.lit(' - '), sf.col('review_body')))
-    df.show(1, False)
     df = df.withColumn('review_body_clean', sf.split(textclean(df.joined), ' '))
     df = df.select(['product_id', 'product_title','review_body_clean', 'star_rating'])
-    df.show(1, False)
+    df.printSchema()
     
     print('starting train test split \n')
-    train, val, test = df.randomSplit([0.7, 0.1, 0.2], seed=427471138)
+    train, val, test = df.randomSplit([0.025, 0.0025, 0.005], seed=427471138)
     
     print('exporting train \n')
     train.write.parquet("s3n://capstone-3-data-bucket-aidan/data/train_data.parquet",mode="overwrite")
-    train.dechache()
+    train.unpersist()
     print('exporting val \n')
     val.write.parquet("s3n://capstone-3-data-bucket-aidan/data/valadation_data.parquet",mode="overwrite")
-    val.dechache()
+    val.unpersist()
     print('exporting test \n')
     test.write.parquet("s3n://capstone-3-data-bucket-aidan/data/test_data.parquet",mode="overwrite")
-    test.dechache()
+    test.unpersist()
