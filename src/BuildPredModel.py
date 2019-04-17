@@ -30,8 +30,8 @@ def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
     #model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
-    model.add(LSTM(units=emdedding_size, dropout=.5))
-    model.add(Dense(units=int(emdedding_size / 4), activation='tanh'))
+    model.add(LSTM(units=int(emdedding_size / 4), dropout=.5))
+    model.add(Dense(units=20, activation='tanh'))
     model.add(Dense(units=1, activation='relu'))
     #model = multi_gpu_model(model, gpus=2)
     model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
@@ -74,7 +74,8 @@ if __name__ == "__main__":
     X_test = vectors.transform(test)
     word_model = Word2Vec.load(args.word2vecModel)
 
-    with open('models/vector.pkl', 'wb') as f:
+    print('saving transformation')
+    with open('vector.pkl', 'wb') as f:
         pickle.dump(vectors, f)
 
     #sample_weight = compute_sample_weight('balanced', y_train)
@@ -88,11 +89,11 @@ if __name__ == "__main__":
     
     print('starting model training')
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    history = model.fit(X_resampled, y_resampled, epochs=config_PM['epoch'], verbose=config_PM['verbose'], batch_size=200)
+    history = model.fit(X_resampled, y_resampled, epochs=config_PM['epoch'], verbose=config_PM['verbose'], batch_size=200, validation_data=(X_val, y_val))
     print(history.history['loss'])
-    y_pred = model.predict(X_test)
-    y_pred = y_pred.reshape(1,-1)
-    y_pred = Rounding(y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-    print(mse)
+    #y_pred = model.predict(X_test)
+    #y_pred = y_pred.reshape(1,-1)
+    #y_pred = Rounding(y_pred)
+    #mse = mean_squared_error(y_test, y_pred)
+    #print(mse)
     model.save('BookPresentModel.h5')

@@ -5,7 +5,7 @@ import json
 from bs4 import BeautifulSoup
 import re
 import unidecode
-from src.MakeWord2Vec import Word2Vect
+from MakeWord2Vec import Word2Vect
 from keras.models import load_model
 nlp = spacy.load('en_core_web_sm')
 
@@ -13,10 +13,10 @@ app = Flask(__name__)
 
 with open('config/contraction_mapping.json') as f:
     contraction_mapping = json.load(f)
-with open('models/vectortransform.pkl', 'rb') as f:
+with open('app/models/vector.pkl', 'rb') as f:
     vectors = pickle.load(f)
 
-model = load_model('models/TestModel.h5')
+# model = load_model('models/TestModel.h5')
 
 def text_cleaner(Doc):
         if Doc is not None:
@@ -54,12 +54,6 @@ def index():
     """Render a simple splash page."""
     return render_template('form/index.html')
 
-@app.route('/submit', methods=['GET'])
-def submit():
-    """Render a page containing a textarea input where the user can paste an
-    article to be classified.  """
-    return render_template('form/submit.html')
-
 @app.route('/predict', methods=['POST'])
 def predict():
     """Recieve the article to be classified from an input form and use the
@@ -67,8 +61,8 @@ def predict():
     """
     data = str(request.form['article_body'])
     tokens = vectorizor(data)
-    pred = model.predict(tokens)
-    return render_template('form/predict.html', article=data, predicted=pred)
+    # pred = model.predict(tokens)
+    return render_template('form/predict.html', article=data, predicted=tokens)
 
 
 if __name__ == '__main__':
