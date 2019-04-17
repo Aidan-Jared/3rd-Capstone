@@ -1,7 +1,7 @@
 {
     "Word2Vec":{
-        "min_count":15,
-        "window":4,
+        "min_count":5,
+        "window":15,
         "epoch":300,
         "size":300,
         "corpus_col": "review_body"

@@ -16,7 +16,8 @@ with open('config/contraction_mapping.json') as f:
 with open('app/models/vector.pkl', 'rb') as f:
     vectors = pickle.load(f)
 
-# model = load_model('models/TestModel.h5')
+model = load_model('models/BookPresentModel.h5')
+model._make_predict_function()
 
 def text_cleaner(Doc):
         if Doc is not None:
@@ -45,7 +46,7 @@ def text_cleaner(Doc):
 
 def vectorizor(text):
     tokens = text_cleaner(text)
-    tokens = vectors.transform(tokens)
+    tokens = vectors.transform([tokens])
     return tokens
 
 
@@ -61,8 +62,9 @@ def predict():
     """
     data = str(request.form['article_body'])
     tokens = vectorizor(data)
-    # pred = model.predict(tokens)
-    return render_template('form/predict.html', article=data, predicted=tokens)
+    print(tokens)
+    pred = model.predict([tokens])[0][0]
+    return render_template('form/predict.html', article=data, predicted=pred)
 
 
 if __name__ == '__main__':
