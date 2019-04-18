@@ -47,19 +47,13 @@ def text_cleaner(Doc):
             return Doc
 ```
 
-This code takes each document removes any markdown formatting and turns all unicode into ascii then replaces all contractions with the full expantion. The resulting string is then read into spaCy where it tokenized. I then run through the tokens and remove whitespace, numbers, urls, and stop words from the document and then return lemmanized words with cases perserved. Then using a premade spark function I split the strings into lists for the word2vec and predictive models down the line. This results in:
+This code takes each document removes any markdown formatting and turns all unicode into ascii then replaces all contractions with the full expantion. The resulting string is then read into spaCy where it tokenized. I then run through the tokens and remove whitespace, numbers, urls, and stop words from the document and then return lemmanized words with cases perserved. Then using a premade spark function I split the strings into lists for the word2vec and predictive models down the line. This results in the following transformation:
 
-```
-This book was just right! - Just the book that I needed to get me through before the new season of Downton Abbey premieres.  I really enjoyed this engaging story. My only complaint is that I read it too fast!  Jo Baker does such a good job of bringing thesedownstairs people to life, especially given, that I am re-reading Pride and Prejudice and I don't hear a peep from these characters within those pages.  Rest assured there is, indeed, a wholeworld going on below the stairs.  An important thing to note is that if you've never read Prideand Prejudice, this story can still be enjoyed.  It stands on its own.  This is one of my favorites for 2013.
-```
-
-becomes:
-
-```
-book right book need new season Downton Abbey premiere enjoy engage story complaint read fast Jo Baker good job bring downstairs people life especially give read Pride Prejudice hear peep character page Rest assure world go stair important thing note read Pride Prejudice story enjoy stand favorite
-```
+![](images/Text_pipeline_ex.png)
 
 I then applied a random split to the Spark dataframe and got a train, valadation, and testing set to work with for the rest of the project. With this done I exported these dataframes to an s3 bucket for latter use.
+
+![](images/Text_Processing.png)
 
 ## Word2Vec
 
@@ -90,7 +84,9 @@ To build my predictive model I decided to look at sentiment analysis Neuaral Net
 
 In order to make the model work I looked at the training data and found the largest string of the data and set that to be the lenght of all my vectors so that I could capture all the context of each sentance. After this my model replaced all strings with an integer index that corisponded with a dictionary entry and then fed the data into my model.
 
-My model ended up
+![](images/Model.png)
+
+My model ended up looking like this
 
 
 ```
@@ -110,4 +106,6 @@ Non-trainable params: 12,360,900
 _________________________________________________________________
 ```
 
-### training and val loss
+But sadly, this model did not work out as I wanted it to. The model made some improvments from the first to second epoch, but there was no change in the training loss and the model tends to predict only a single value for all inputs.
+
+![](images/model_loss.png)
