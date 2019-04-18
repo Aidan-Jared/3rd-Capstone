@@ -34,9 +34,9 @@ def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
     #model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
-    model.add(LSTM(units=int(emdedding_size / 4), dropout=.5))
+    model.add(LSTM(units=int(emdedding_size / 4), dropout=.5, kernel_initializer='RandomNormal'))
     # model.add(Dense(units=20, activation='tanh'))
-    model.add(Dense(units=1, activation='relu'))
+    model.add(Dense(units=1, activation='relu', kernel_initializer='RandomNormal'))
     #model = multi_gpu_model(model, gpus=2)
     model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
     return model
@@ -65,9 +65,9 @@ if __name__ == "__main__":
     val = pq.ParquetDataset(args.val, filesystem=s3).read_pandas().to_pandas()
     test = pq.ParquetDataset(args.test, filesystem=s3).read_pandas().to_pandas()
     
-    train, discard = train_test_split(train, train_size=.002, stratify=train['star_rating'], random_state=42)
-    val, discard = train_test_split(val, train_size=.02, stratify=val['star_rating'], random_state=42)
-    test, discard = train_test_split(test, train_size=.02, stratify=test['star_rating'], random_state=42)
+    train, discard = train_test_split(train, train_size=.2, stratify=train['star_rating'], random_state=42)
+    val, discard = train_test_split(val, train_size=.2, stratify=val['star_rating'], random_state=42)
+    test, discard = train_test_split(test, train_size=.2, stratify=test['star_rating'], random_state=42)
     train, y_train = text_prep(train)
     val, y_val = text_prep(val)
     test, y_test = text_prep(test)
@@ -96,8 +96,9 @@ if __name__ == "__main__":
     
     print('starting model training')
     model = buildModel(vocab_size, emdedding_size, pretrained_weights)
-    history = model.fit(X_resampled, y_resampled, epochs=config_PM['epoch'], verbose=config_PM['verbose'], batch_size=500)
+    history = model.fit(X_resampled, y_resampled, epochs=config_PM['epoch'], verbose=config_PM['verbose'], batch_size=config_PM['batch_size'], validation_data=(X_val, y_val))
     print(history.history['loss'])
+    model.save('models/BookPresentModel.h5')
     
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -108,8 +109,9 @@ if __name__ == "__main__":
     plt.savefig('images/model_loss.png')
 
     y_pred = model.predict(X_test)
-    y_pred = y_pred.reshape(1,-1)
-    y_pred = Rounding(y_pred)
+    print(y_pred)
+    print(y_pred.shape)
+    # y_pred = y_pred.reshape(1,-1)
+    # y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
-    model.save('models/BookPresentModel.h5')

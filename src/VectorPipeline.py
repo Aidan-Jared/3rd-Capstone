@@ -94,7 +94,7 @@ class Corpus2Vecs(object):
 
     def fit(self, X):
         # cleaned = self.clean_text(X)
-        self.max_size = len(max(X, key=len))
+        self.max_size = int(len(max(X, key=len)) * .25)
 
     def transform(self, X):
         #  cleaned = self.clean_text(X)

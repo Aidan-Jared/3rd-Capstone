@@ -88,8 +88,26 @@ worked the best and produced the best embeddings as you can see here:
 
 To build my predictive model I decided to look at sentiment analysis Neuaral Nets as a base because review scores can be seen as a type of sentiment. In order to apply to Word2Vec model the first layer of my model was an embedding layer to which I added in the Word2Vec weights and I then made that layer untrainable. This layer then went into a LSTM and then a dense layerwith a tanh acvtivation fuction into a singluar dense output with a relu activation. I then rounded the results and found the MSE of the model.
 
-### information about the data shape
+In order to make the model work I looked at the training data and found the largest string of the data and set that to be the lenght of all my vectors so that I could capture all the context of each sentance. After this my model replaced all strings with an integer index that corisponded with a dictionary entry and then fed the data into my model.
 
-### model summary
+My model ended up
+
+
+```
+Layer (type)                 Output Shape              Param #
+=================================================================
+embedding_1 (Embedding)      (None, None, 300)         12360900
+_________________________________________________________________
+lstm_1 (LSTM)                (None, 75)                112800
+_________________________________________________________________
+dense_1 (Dense)              (None, 20)                1520
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 21
+=================================================================
+Total params: 12,475,241
+Trainable params: 114,341
+Non-trainable params: 12,360,900
+_________________________________________________________________
+```
 
 ### training and val loss

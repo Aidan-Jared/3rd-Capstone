@@ -2,7 +2,7 @@
     "Word2Vec":{
         "min_count":5,
         "window":15,
-        "epoch":300,
+        "epoch":500,
         "size":300,
         "corpus_col": "review_body"
     },
@@ -10,7 +10,8 @@
     "PredModel":{
         "corpus_col": "review_body",
         "y_col": "star_rating",
-        "epoch":1,
-        "verbose":1
+        "epoch":15,
+        "verbose":1,
+	"batch_size":256
     }
 }
