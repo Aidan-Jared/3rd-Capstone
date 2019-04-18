@@ -38,7 +38,7 @@ def buildModel(vocab_size, emdedding_size, pretrained_weights):
     # model.add(Dense(units=20, activation='tanh'))
     model.add(Dense(units=1, activation='relu', kernel_initializer='RandomNormal'))
     #model = multi_gpu_model(model, gpus=2)
-    model.compile(optimizer=Adam(lr=.001), loss= 'mse', metrics=["mse"],)
+    model.compile(optimizer=Adam(lr=.1), loss= 'mse', metrics=["mse"],)
     return model
 
 def Rounding(y):
