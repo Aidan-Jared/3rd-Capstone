@@ -10,10 +10,34 @@ import s3fs
 s3 = s3fs.S3FileSystem()
 
 class Word2Vect(object):
+    '''
+    Class to train a Word2Vec model and save the model or return the model
+    '''
     def __init__(self, fileName=None):
+        '''
+        initilizes the class
+        --------------------
+        input:
+        fileName: str or None, the path to where the model will be saved, if none
+        the model will be returned and not saved
+        '''
         self.fileName = fileName
     
     def fit(self, X, min_count = 1, window = 5, epoch = 200, size = 100, load = None):
+        '''
+        trains the word2vec model from the imputed data
+        -----------------------------------------------
+        inputs:
+        x: list, the data in lists of lists format for the model to train on
+        min_count: int, times a word has to apear before being considered
+        window: int, the size of the context window
+        epoch: int, how many times all the training vectors are used
+        size: int, the size of the final vector
+        load: str, load a pretrained model and train some more (untested)
+
+        return:
+        if no filename is given will return trained model
+        '''
         if load is None:
             word_model = Word2Vec(
                 X,
@@ -35,6 +59,16 @@ class Word2Vect(object):
                 return word_model
 
 def text_prep(df):
+    '''
+    seperates corpus and target and formats corpus for trainging
+    ------------------------------------------------------------
+    input
+    df: dataframe, dataframe of corpus and targes
+
+    returns:
+    text: list, corpus formated for training
+    y: list, the models targets
+    '''
     text = df['review_body_clean']
     y = df['star_rating'].values
     text = [i.tolist() if i is not None else [''] for i in text]

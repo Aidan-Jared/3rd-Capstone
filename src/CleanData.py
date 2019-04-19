@@ -35,6 +35,15 @@ with open('config/contraction_mapping.json') as f:
         contraction_mapping = json.load(f)
 
 def text_cleaner(Doc):
+        '''
+        reformats, tokenizes, removes stop words, and lemmanizes the inputed text
+        -------------------------------------------------------------------------
+        input:
+        Doc: str, the document to be cleaned
+
+        return:
+        Doc: str, the cleaned and processed document
+        '''
         if Doc is not None:
             Doc = ' '.join(BeautifulSoup(Doc).findAll(text=True))
             try:
@@ -61,6 +70,9 @@ def text_cleaner(Doc):
 
 @sf.pandas_udf("string", sf.PandasUDFType.SCALAR)
 def textclean(x):
+    '''
+    adds text_cleaner to spark functions
+    '''
     return x.apply(text_cleaner)
 textclean = spark.udf.register('textclean', textclean)
 

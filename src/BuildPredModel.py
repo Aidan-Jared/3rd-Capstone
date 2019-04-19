@@ -8,7 +8,7 @@ from keras.layers import LSTM, Dense, Bidirectional, Embedding, Dropout, TimeDis
 from keras.optimizers import Adam
 from keras.initializers import Constant
 # from keras.utils import multi_gpu_model
-from MakeWord2Vec import Corpus2Vecs
+from MakeWord2Vec import Corpus2Vecs, text_prep
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -24,13 +24,18 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 s3 = s3fs.S3FileSystem()
 
-def text_prep(df):
-    text = df['review_body_clean']
-    y = df['star_rating'].values
-    text = [i.tolist() if i is not None else [''] for i in text]
-    return text, y
-
 def buildModel(vocab_size, emdedding_size, pretrained_weights):
+    '''
+    the keras model structure
+    -------------------------
+    input:
+    vocab_size: int, the size of the vocab
+    embedding_size: int, the size of the word2vec vectors
+    pretrained_weights: numpy array, the weights to use for the embedding layer
+
+    returns:
+    model: keras model
+    '''
     model = Sequential()
     model.add(Embedding(input_dim=vocab_size, output_dim=emdedding_size, embeddings_initializer=Constant(pretrained_weights), trainable=False))
     #model.add(TimeDistributed(Dense(units=emdedding_size, use_bias=False)))
@@ -73,7 +78,6 @@ if __name__ == "__main__":
     test, y_test = text_prep(test)
     
     print('formating data')
-    #nlp = spacy.load(config_PM['spacy_model'], disable=config_PM['spacy_disable'])
     vectors = Corpus2Vecs(modelFile=args.word2vecModel)
     vectors.fit(train)
     X_train = vectors.transform(train)
@@ -85,11 +89,8 @@ if __name__ == "__main__":
     with open('models/vector.pkl', 'wb') as f:
         pickle.dump(vectors, f)
 
-    #sample_weight = compute_sample_weight('balanced', y_train)
-
     rus = RandomUnderSampler(random_state=0)
     X_resampled, y_resampled = rus.fit_resample(X_train, y_train)
-    # X_smt, y_smt = Smote(X_train, y_train)
 
     pretrained_weights = word_model.wv.syn0
     vocab_size, emdedding_size = pretrained_weights.shape
@@ -109,9 +110,5 @@ if __name__ == "__main__":
     plt.savefig('images/model_loss.png')
 
     y_pred = model.predict(X_test)
-    print(y_pred)
-    print(y_pred.shape)
-    # y_pred = y_pred.reshape(1,-1)
-    # y_pred = Rounding(y_pred)
     mse = mean_squared_error(y_test, y_pred)
     print(mse)
