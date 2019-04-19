@@ -109,3 +109,13 @@ _________________________________________________________________
 But sadly, this model did not work out as I wanted it to. The model made some improvments from the first to second epoch, but there was no change in the training loss and the model tends to predict only a single value for all inputs.
 
 ![](images/model_loss.png)
+
+## Flask app
+
+As part of this project I developed a flask app inside a docker container so anyone can run the model and play around with it. You 
+can pull it with the following comand:
+
+```
+docker pull aidanjared/reviewpredictor:latest
+docker run -p 80:5000 aidanjared/reviewpredictor:latest
+```
