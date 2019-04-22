@@ -110,6 +110,19 @@ But sadly, this model did not work out as I wanted it to. The model made some im
 
 ![](images/model_loss.png)
 
+## Future Directions and Improvments
+
+In order to improve the model I think implimenting a word filter to remove words that have a high document frequency would result in a much richer corpus to work with while reducing the computational time. I also think trying out more modern word embeding algorithims such as ELMO and BERT might improve the results. It might also be intresting to try out some non nueral nets might improve the results and swiching to a classifier instead of a regressor.
+
+## Conclussion
+
+While the model was a faluier, I do think it was a valuable learining expearnce about using neuaral networks and text proccessing at large scales. The spark skills I learned to work with the data are going to stick with me and help me work at companies that work with large data all the time.
+
+## Acknowlegments
+
+- Galvanize Instructor Team
+- The spaCy deep learing [tutorial](https://github.com/explosion/spacy/blob/master/examples/deep_learning_keras.py)
+
 ## Flask app
 
 As part of this project I developed a flask app inside a docker container so anyone can run the model and play around with it. You 
