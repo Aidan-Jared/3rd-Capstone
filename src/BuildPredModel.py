@@ -46,11 +46,32 @@ def buildModel(vocab_size, emdedding_size, pretrained_weights):
     model.compile(optimizer=Adam(lr=.1), loss= 'mse', metrics=["mse"],)
     return model
 
-def Rounding(y):
-    y = np.round(y)
-    y[y > 5] = 5
-    y[y < 1] = 1
-    return y
+def split_data(fileName):
+    '''
+    reads in data and returns the corpus and target of the data
+    -----------------------------------------------------------
+    input:
+    fileName: str, the location of the file in the s3 bucket
+
+    output:
+    corpus: list, the cleaned corpus for the model
+    y: list, the targets for the model
+    '''
+    df = pq.ParquetDataset(fileName, filesystem=s3).read_pandas().to_pandas()
+    df, discard = train_test_split(df, train_size=.2, stratify=train['star_rating'], random_state=42)
+    discard = 0
+    corpus, y = text_prep(df)
+    return corpus, y
+
+def plot_loss(history):
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'valadation'], loc='upper left')
+        plt.savefig('images/model_loss.png')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Read in Files to make LSTM model')
@@ -59,23 +80,15 @@ if __name__ == "__main__":
     parser.add_argument('--val', type=str, default="s3://capstone-3-data-bucket-aidan/data/valadation_data.parquet", help='location of file to use for valadation')
     parser.add_argument('--test', type=str, default="s3://capstone-3-data-bucket-aidan/data/test_data.parquet", help='location of file to use for test')
     parser.add_argument('--word2vecModel', type=str, default='models/word2vec.model', help='location of the premade word2vec model')
-    # parser.add_argument('--load', type=str, default = None, help='location of model to load and continue training')
     args = parser.parse_args()
 
     with open(args.config) as f:
         config_PM = json.load(f)['PredModel']
     
     print('loading data')
-    train = pq.ParquetDataset(args.train, filesystem=s3).read_pandas().to_pandas()
-    val = pq.ParquetDataset(args.val, filesystem=s3).read_pandas().to_pandas()
-    test = pq.ParquetDataset(args.test, filesystem=s3).read_pandas().to_pandas()
-    
-    train, discard = train_test_split(train, train_size=.2, stratify=train['star_rating'], random_state=42)
-    val, discard = train_test_split(val, train_size=.2, stratify=val['star_rating'], random_state=42)
-    test, discard = train_test_split(test, train_size=.2, stratify=test['star_rating'], random_state=42)
-    train, y_train = text_prep(train)
-    val, y_val = text_prep(val)
-    test, y_test = text_prep(test)
+    train, y_train = split_data(args.train)
+    val, y_val = split_data(args.val)
+    test, y_test = split_data(args.test)
     
     print('formating data')
     vectors = Corpus2Vecs(modelFile=args.word2vecModel)
@@ -101,13 +114,7 @@ if __name__ == "__main__":
     print(history.history['loss'])
     model.save('models/BookPresentModel.h5')
     
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'valadation'], loc='upper left')
-    plt.savefig('images/model_loss.png')
+    plot_loss(history)
 
     y_pred = model.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
