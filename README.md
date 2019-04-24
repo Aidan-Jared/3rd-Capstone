@@ -1,4 +1,4 @@
-# Review Scores From Written 
+# Review Scores From Written Reviews
 
 ## Motivation and Project Explanation
 
