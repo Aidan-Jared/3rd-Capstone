@@ -110,14 +110,6 @@ But sadly, this model did not work out as I wanted it to. The model made some im
 
 ![](images/model_loss.png)
 
-## Future Directions and Improvements
-
-In order to improve the model, I think implementing a word filter to remove words that have a high document frequency would result in a much richer corpus to work with while reducing the computational time. I also think trying out more modern word embedding algorithms such as ELMO and BERT might improve the results. It might also be interesting to try out some non-nueral nets might improve the results and switch to a classifier instead of a regressor.
-
-## Conclussion
-
-While the model was a failure, I do think it was a valuable learning experience about using neural networks and text processing at large scales. The spark skills I learned to work with the data are going to stick with me and help me work at companies that work with large data all the time.
-
 ## Acknowledgments
 
 - Galvanize Instructor Team
