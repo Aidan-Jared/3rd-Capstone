@@ -106,10 +106,6 @@ Non-trainable params: 12,360,900
 _________________________________________________________________
 ```
 
-But sadly, this model did not work out as I wanted it to. The model made some improvements from the first to second epoch, but there was no change in the training loss and the model tends to predict only a single value for all inputs.
-
-![](images/model_loss.png)
-
 ## Acknowledgments
 
 - Galvanize Instructor Team
